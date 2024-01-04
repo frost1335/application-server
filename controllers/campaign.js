@@ -1,4 +1,3 @@
-const { fabric } = require("fabric");
 const fs = require("fs");
 const asyncHandler = require("../middlewares/asyncHandler");
 
