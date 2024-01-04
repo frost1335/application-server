@@ -1,4 +1,3 @@
-const { createCanvas, loadImage } = require("canvas");
 const { fabric } = require("fabric");
 const fs = require("fs");
 const asyncHandler = require("../middlewares/asyncHandler");
@@ -18,43 +17,43 @@ exports.create = asyncHandler(async (req, res, next) => {
   //   });
   // });
 
-  const canvas = new fabric.Canvas(null, { width: 700, height: 700 });
+  // const canvas = new fabric.Canvas(null, { width: 700, height: 700 });
 
-  campaign.design.front.map((elem, idx) => {
-    if (elem.type === "text") {
-      console.log(elem);
-      const canvasText = new fabric.Text(elem.text, {
-        ...elem,
-      });
+  // campaign.design.front.map((elem, idx) => {
+  //   if (elem.type === "text") {
+  //     console.log(elem);
+  //     const canvasText = new fabric.Text(elem.text, {
+  //       ...elem,
+  //     });
 
-      canvas.add(canvasText);
-      canvas.renderAll();
-    }
-    if (elem.type === "icon") {
-      fabric.loadSVGFromURL(elem.url, (objects, options) => {
-        const svgObject = fabric.util.groupSVGElements(objects, options);
+  //     canvas.add(canvasText);
+  //     canvas.renderAll();
+  //   }
+  //   if (elem.type === "icon") {
+  //     fabric.loadSVGFromURL(elem.url, (objects, options) => {
+  //       const svgObject = fabric.util.groupSVGElements(objects, options);
 
-        svgObject.set({ ...elem });
+  //       svgObject.set({ ...elem });
 
-        svgObject._objects.map((elem) =>
-          elem.fill ? elem.set({ fill: elem.fill }) : elem
-        );
+  //       svgObject._objects.map((elem) =>
+  //         elem.fill ? elem.set({ fill: elem.fill }) : elem
+  //       );
 
-        canvas.add(svgObject);
-        canvas.renderAll();
-      });
-    }
-  });
+  //       canvas.add(svgObject);
+  //       canvas.renderAll();
+  //     });
+  //   }
+  // });
 
-  const out = fs.createWriteStream(__dirname + "/output.png");
-  const stream = canvas.createPNGStream();
-  stream.pipe(out);
-  out.on("finish", () => console.log("Image saved."));
+  // const out = fs.createWriteStream(__dirname + "/output.png");
+  // const stream = canvas.createPNGStream();
+  // stream.pipe(out);
+  // out.on("finish", () => console.log("Image saved."));
 
-  return {
-    success: true,
-    data: "Campaign is saved",
-  };
+  // return {
+  //   success: true,
+  //   data: "Campaign is saved",
+  // };
 });
 exports.getOne = asyncHandler(async (req, res, next) => {
   return "getOne";
