@@ -1,65 +1,128 @@
-const fs = require("fs");
 const asyncHandler = require("../middlewares/asyncHandler");
+const { registerFont, createCanvas } = require("canvas");
+const saveCampaign = require("../campaign/saveCampaign");
+const ErrorResponse = require("../utils/errorResponse");
+const Campaign = require("../schemas/Campaign");
+const { isDeepStrictEqual } = require("util");
+const { isValidObjectId } = require("mongoose");
+
+registerFont("./public/RobotoMono-VariableFont_wght.ttf", {
+  family: "RobotoMono",
+});
 
 exports.getAll = asyncHandler(async (req, res, next) => {
-  return res.json({ user: req.user });
+  const campaigns = await Campaign.find();
+
+  console.log(campaigns);
+
+  return res.status(200).json({ success: true, data: campaigns });
 });
 
 exports.create = asyncHandler(async (req, res, next) => {
-  const campaign = req.body;
+  const campaignData = req.body;
 
-  // campaign.products.map((elem, index) => {
-  //   console.log(elem);
+  // throw error if there is no design object in campaign
+  if (
+    !campaignData?.design?.front?.length &&
+    !campaignData?.design?.back?.length
+  ) {
+    return next(
+      new ErrorResponse(`Dizayda kamida 1 dona element bolishi kerak!`, 400)
+    );
+  }
 
-  //   elem.types.map((type, idx) => {
-  //     console.log(type);
-  //   });
-  // });
+  // creating mongodb instance of campaign
+  const campaign = new Campaign({
+    title: "Draft campaign",
+    design: campaignData.design,
+    products: campaignData.products,
+    images: [],
+    status: "Draft",
+  });
 
-  // const canvas = new fabric.Canvas(null, { width: 700, height: 700 });
+  // sending campaign data and campaign id in order save images in proper file
+  const campaignImages = await saveCampaign.onSave(campaignData, campaign._id);
 
-  // campaign.design.front.map((elem, idx) => {
-  //   if (elem.type === "text") {
-  //     console.log(elem);
-  //     const canvasText = new fabric.Text(elem.text, {
-  //       ...elem,
-  //     });
+  // inserting saved images to campaign data
+  campaign.images = [...campaignImages];
 
-  //     canvas.add(canvasText);
-  //     canvas.renderAll();
-  //   }
-  //   if (elem.type === "icon") {
-  //     fabric.loadSVGFromURL(elem.url, (objects, options) => {
-  //       const svgObject = fabric.util.groupSVGElements(objects, options);
+  // saving campaign in mongoDB
+  await campaign.save();
 
-  //       svgObject.set({ ...elem });
+  console.log("Campaign saved!");
 
-  //       svgObject._objects.map((elem) =>
-  //         elem.fill ? elem.set({ fill: elem.fill }) : elem
-  //       );
-
-  //       canvas.add(svgObject);
-  //       canvas.renderAll();
-  //     });
-  //   }
-  // });
-
-  // const out = fs.createWriteStream(__dirname + "/output.png");
-  // const stream = canvas.createPNGStream();
-  // stream.pipe(out);
-  // out.on("finish", () => console.log("Image saved."));
-
-  // return {
-  //   success: true,
-  //   data: "Campaign is saved",
-  // };
+  res.status(201).json({
+    success: true,
+    data: campaign,
+  });
 });
 exports.getOne = asyncHandler(async (req, res, next) => {
-  return "getOne";
+  const campaign = await Campaign.findById(req.params.campaignId);
+
+  res.status(200).json({
+    success: true,
+    data: campaign,
+  });
 });
-exports.editOne = asyncHandler(async (req, res, next) => {
-  return "editOne";
+
+exports.editAndSave = asyncHandler(async (req, res, next) => {
+  const { campaignId } = req.params;
+
+  if (!isValidObjectId(campaignId)) {
+    return next(new ErrorResponse(`Campaign ID-${campaignId} toplimadi`, 404));
+  }
+
+  const campaign = await Campaign.findById(campaignId);
+
+  const campaignSelect = {
+    design: { ...JSON.parse(JSON.stringify(campaign.design)) },
+    products: { ...JSON.parse(JSON.stringify(campaign.products)) },
+  };
+
+  const requestSelect = {
+    design: { ...JSON.parse(JSON.stringify(req.body.design)) },
+    products: { ...JSON.parse(JSON.stringify(req.body.products)) },
+  };
+
+  if (isDeepStrictEqual(campaignSelect, requestSelect)) {
+    res.status(200).json({
+      success: true,
+      data: {
+        updated: false,
+        message: "Nothing to change",
+      },
+    });
+  } else {
+    // edit the campaign
+    const updatedCampaign = await Campaign.findByIdAndUpdate(
+      {
+        _id: campaignId,
+      },
+      {
+        design: {
+          ...req.body.design,
+        },
+        products: [...req.body.products],
+        _id: campaignId,
+      },
+      { new: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      data: {
+        updated: true,
+        message: "Campaign saved",
+        campaign: updatedCampaign,
+      },
+    });
+  }
 });
+
+exports.modifyOne = asyncHandler(async (req, res, next) => {
+  return "modifyOne";
+});
+
 exports.deleteOne = asyncHandler(async (req, res, next) => {
   return "deleteOne";
 });

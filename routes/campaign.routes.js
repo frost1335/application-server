@@ -4,16 +4,18 @@ const {
   getAll,
   getOne,
   create,
-  editOne,
+  editAndSave,
+  modifyOne,
   deleteOne,
 } = require("../controllers/campaign");
 const router = Router();
 
 router.route("/").get(authenticateUser, getAll).post(authenticateUser, create);
 router
-  .route("/:id")
+  .route("/:campaignId")
   .get(authenticateUser, getOne)
-  .patch(authenticateUser, editOne)
+  .patch(authenticateUser, editAndSave)
+  .put(authenticateUser, modifyOne)
   .delete(authenticateUser, deleteOne);
 
 module.exports = router;

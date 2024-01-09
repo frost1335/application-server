@@ -7,7 +7,7 @@ exports.upload = asyncHandler(async (req, res, next) => {
     return res.status(400).send("No image uploaded");
   }
 
-  const imagePath = "images/" + req.file.filename;
+  const imagePath = "/files/images/" + req.file.filename;
 
   const image = new Image({ image: imagePath });
 
