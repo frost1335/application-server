@@ -1,14 +1,9 @@
 const asyncHandler = require("../middlewares/asyncHandler");
-const { registerFont, createCanvas } = require("canvas");
 const saveCampaign = require("../campaign/saveCampaign");
 const ErrorResponse = require("../utils/errorResponse");
 const Campaign = require("../schemas/Campaign");
 const { isDeepStrictEqual } = require("util");
 const { isValidObjectId } = require("mongoose");
-
-registerFont("./public/RobotoMono-VariableFont_wght.ttf", {
-  family: "RobotoMono",
-});
 
 exports.getAll = asyncHandler(async (req, res, next) => {
   const campaigns = await Campaign.find();
